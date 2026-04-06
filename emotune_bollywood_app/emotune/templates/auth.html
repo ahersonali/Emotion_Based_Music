@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EmoTune – Bollywood Emotion Music</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#f7c948;--pink:#e84393;--purple:#7b2ff7;--dark:#0d0d1a;
+  --card:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.12);
+}
+body{
+  min-height:100vh;background:var(--dark);font-family:'Poppins',sans-serif;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.bg{
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse at 20% 50%,rgba(123,47,247,0.3) 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 20%,rgba(232,67,147,0.3) 0%,transparent 50%),
+             radial-gradient(ellipse at 50% 80%,rgba(247,201,72,0.15) 0%,transparent 50%),
+             var(--dark);
+  z-index:0;
+}
+.stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+.star{
+  position:absolute;border-radius:50%;
+  animation:twinkle var(--d,2s) infinite alternate;
+  background:white;opacity:0.4;
+}
+@keyframes twinkle{to{opacity:0.1;transform:scale(0.5)}}
+
+.container{
+  position:relative;z-index:1;width:100%;max-width:420px;padding:16px;
+}
+.logo{text-align:center;margin-bottom:28px}
+.logo .icon{font-size:52px;display:block;margin-bottom:6px;
+  animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.logo h1{font-size:2rem;font-weight:900;
+  background:linear-gradient(135deg,var(--gold),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.logo p{color:rgba(255,255,255,0.5);font-size:0.8rem;margin-top:2px}
+
+.card{
+  background:var(--card);backdrop-filter:blur(20px);
+  border:1px solid var(--border);border-radius:24px;padding:28px;
+}
+.tabs{display:flex;background:rgba(255,255,255,0.05);border-radius:14px;padding:4px;margin-bottom:24px}
+.tab{
+  flex:1;padding:10px;text-align:center;border-radius:10px;cursor:pointer;
+  color:rgba(255,255,255,0.5);font-weight:600;font-size:0.9rem;transition:all 0.3s;border:none;background:none;
+}
+.tab.active{
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  color:white;box-shadow:0 4px 15px rgba(123,47,247,0.4);
+}
+.form-group{margin-bottom:16px}
+label{display:block;color:rgba(255,255,255,0.7);font-size:0.8rem;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+input{
+  width:100%;padding:13px 16px;background:rgba(255,255,255,0.07);
+  border:1px solid var(--border);border-radius:12px;color:white;
+  font-size:0.95rem;font-family:'Poppins',sans-serif;outline:none;transition:all 0.3s;
+}
+input:focus{border-color:var(--purple);background:rgba(123,47,247,0.1);box-shadow:0 0 0 3px rgba(123,47,247,0.15)}
+input::placeholder{color:rgba(255,255,255,0.25)}
+.btn{
+  width:100%;padding:14px;border:none;border-radius:12px;cursor:pointer;
+  font-size:1rem;font-weight:700;font-family:'Poppins',sans-serif;
+  background:linear-gradient(135deg,var(--purple),var(--pink));color:white;
+  box-shadow:0 6px 20px rgba(123,47,247,0.4);transition:all 0.3s;margin-top:8px;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(123,47,247,0.5)}
+.btn:active{transform:translateY(0)}
+.msg{
+  margin-top:12px;padding:10px 14px;border-radius:10px;font-size:0.85rem;text-align:center;display:none;
+}
+.msg.error{background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);color:#e74c3c}
+.msg.success{background:rgba(46,213,115,0.2);border:1px solid rgba(46,213,115,0.4);color:#2ed573}
+.divider{text-align:center;color:rgba(255,255,255,0.2);font-size:0.75rem;margin:14px 0}
+.feature-pills{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:16px}
+.pill{
+  padding:4px 12px;border-radius:20px;font-size:0.7rem;font-weight:600;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="stars" id="stars"></div>
+<div class="container">
+  <div class="logo">
+    <span class="icon">🎵</span>
+    <h1>EmoTune</h1>
+    <p>Bollywood • Emotion • Music • Camera</p>
+  </div>
+  <div class="card">
+    <div class="tabs">
+      <button class="tab {% if mode=='login' %}active{% endif %}" onclick="switchTab('login')" id="tab-login">Login</button>
+      <button class="tab {% if mode=='register' %}active{% endif %}" onclick="switchTab('register')" id="tab-register">Register</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="form-login" {% if mode=='register' %}style="display:none"{% endif %}>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="l-email" placeholder="aapka@email.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="l-pass" placeholder="••••••••">
+      </div>
+      <button class="btn" onclick="doLogin()">🎵 Login &amp; Enjoy Music</button>
+      <div class="msg" id="l-msg"></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="form-register" {% if mode=='login' %}style="display:none"{% endif %}>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="r-user" placeholder="Aapka naam">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="r-email" placeholder="aapka@email.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="r-pass" placeholder="Min 6 characters">
+      </div>
+      <button class="btn" onclick="doRegister()">🚀 Create Account Free</button>
+      <div class="msg" id="r-msg"></div>
+    </div>
+
+    <div class="divider">✦ Free • No Credit Card • Open Source ✦</div>
+    <div class="feature-pills">
+      <span class="pill">📷 Camera AI</span>
+      <span class="pill">🎵 Bollywood Songs</span>
+      <span class="pill">👥 Group Detection</span>
+      <span class="pill">90s Hits</span>
+      <span class="pill">Trending 2024</span>
+    </div>
+  </div>
+</div>
+<script>
+// stars
+const s=document.getElementById('stars');
+for(let i=0;i<60;i++){
+  const d=document.createElement('div');
+  d.className='star';
+  const sz=Math.random()*3+1;
+  d.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${Math.random()*3+1}s`;
+  s.appendChild(d);
+}
+
+function switchTab(t){
+  document.getElementById('form-login').style.display=t==='login'?'block':'none';
+  document.getElementById('form-register').style.display=t==='register'?'block':'none';
+  document.getElementById('tab-login').classList.toggle('active',t==='login');
+  document.getElementById('tab-register').classList.toggle('active',t==='register');
+}
+
+function showMsg(id,text,type){
+  const m=document.getElementById(id);m.textContent=text;m.className='msg '+type;m.style.display='block';
+}
+
+async function doLogin(){
+  const email=document.getElementById('l-email').value;
+  const password=document.getElementById('l-pass').value;
+  if(!email||!password){showMsg('l-msg','Please fill all fields','error');return;}
+  const res=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+  const data=await res.json();
+  if(data.success){showMsg('l-msg','✅ Welcome back!','success');setTimeout(()=>window.location=data.redirect,800);}
+  else showMsg('l-msg',data.message,'error');
+}
+
+async function doRegister(){
+  const username=document.getElementById('r-user').value;
+  const email=document.getElementById('r-email').value;
+  const password=document.getElementById('r-pass').value;
+  if(!username||!email||!password){showMsg('r-msg','Please fill all fields','error');return;}
+  if(password.length<6){showMsg('r-msg','Password min 6 characters','error');return;}
+  const res=await fetch('/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,email,password})});
+  const data=await res.json();
+  if(data.success){showMsg('r-msg','🎉 Account created!','success');setTimeout(()=>window.location=data.redirect,800);}
+  else showMsg('r-msg',data.message,'error');
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Enter'){const active=document.querySelector('.tab.active').id;if(active==='tab-login')doLogin();else doRegister();}});
+</script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EmoTune – Home</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#f7c948;--pink:#e84393;--purple:#7b2ff7;--dark:#0d0d1a;--card:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.1)}
+body{min-height:100vh;background:var(--dark);font-family:'Poppins',sans-serif;color:white}
+.bg{position:fixed;inset:0;background:radial-gradient(ellipse at 10% 20%,rgba(123,47,247,0.25) 0%,transparent 55%),radial-gradient(ellipse at 90% 80%,rgba(232,67,147,0.2) 0%,transparent 50%),var(--dark);z-index:0;pointer-events:none}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(13,13,26,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-size:1.3rem;font-weight:900;background:linear-gradient(135deg,var(--gold),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-user{display:flex;align-items:center;gap:10px}
+.avatar-badge{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.username{font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.8)}
+.logout-btn{padding:6px 14px;border:1px solid var(--border);border-radius:20px;background:none;color:rgba(255,255,255,0.5);font-size:0.75rem;cursor:pointer;font-family:'Poppins',sans-serif;transition:all 0.3s}
+.logout-btn:hover{background:rgba(255,255,255,0.08);color:white}
+
+main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:24px 16px 60px}
+
+.hero{text-align:center;padding:40px 0 30px}
+.hero h2{font-size:2rem;font-weight:900;line-height:1.2;margin-bottom:10px}
+.hero h2 span{background:linear-gradient(135deg,var(--gold),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{color:rgba(255,255,255,0.5);font-size:0.95rem;max-width:400px;margin:0 auto 28px}
+
+.big-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:16px 32px;border-radius:50px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  color:white;font-size:1.1rem;font-weight:700;font-family:'Poppins',sans-serif;
+  box-shadow:0 8px 30px rgba(123,47,247,0.5);transition:all 0.3s;text-decoration:none;
+}
+.big-btn:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(123,47,247,0.6)}
+.big-btn .icon{font-size:1.4rem;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+
+.section-title{font-size:1rem;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:32px 0 14px}
+
+.emotion-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-bottom:32px}
+.emotion-chip{
+  padding:14px 10px;border-radius:16px;text-align:center;cursor:pointer;
+  background:var(--card);border:1px solid var(--border);transition:all 0.3s;text-decoration:none;display:block;
+}
+.emotion-chip:hover{transform:translateY(-4px);border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.1)}
+.emotion-chip .e{font-size:2rem;display:block;margin-bottom:4px}
+.emotion-chip .el{font-size:0.7rem;color:rgba(255,255,255,0.6);font-weight:600}
+
+.era-section{margin-bottom:32px}
+.era-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.era-tab{
+  padding:7px 16px;border-radius:20px;border:1px solid var(--border);
+  background:none;color:rgba(255,255,255,0.5);font-size:0.8rem;font-weight:600;
+  cursor:pointer;font-family:'Poppins',sans-serif;transition:all 0.3s;
+}
+.era-tab.active{background:linear-gradient(135deg,var(--gold),var(--pink));color:var(--dark);border-color:transparent}
+.era-tab:hover:not(.active){background:rgba(255,255,255,0.08);color:white}
+
+.songs-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.songs-grid{grid-template-columns:1fr}}
+.song-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;
+  transition:all 0.3s;text-decoration:none;
+}
+.song-card:hover{background:rgba(255,255,255,0.1);transform:translateX(4px)}
+.song-thumb{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;
+}
+.song-info .title{font-size:0.85rem;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.song-info .artist{font-size:0.7rem;color:rgba(255,255,255,0.45)}
+.song-info .film{font-size:0.65rem;color:var(--gold);font-weight:600;margin-top:2px}
+.play-icon{margin-left:auto;font-size:1.1rem;opacity:0.5}
+.song-card:hover .play-icon{opacity:1}
+
+.group-section{
+  background:linear-gradient(135deg,rgba(123,47,247,0.2),rgba(232,67,147,0.2));
+  border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:20px;margin-bottom:24px;
+}
+.group-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.group-header .icon{font-size:2rem}
+.group-header h3{font-size:1.1rem;font-weight:700}
+.group-header p{font-size:0.75rem;color:rgba(255,255,255,0.5)}
+.group-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.group-scroll::-webkit-scrollbar{display:none}
+.group-song{
+  flex-shrink:0;width:130px;background:rgba(0,0,0,0.3);border-radius:14px;
+  padding:12px;text-align:center;cursor:pointer;transition:all 0.3s;border:1px solid rgba(255,255,255,0.08);
+  text-decoration:none;display:block;
+}
+.group-song:hover{background:rgba(255,255,255,0.1);transform:translateY(-3px)}
+.group-song .g-thumb{font-size:1.8rem;display:block;margin-bottom:4px}
+.group-song .g-title{font-size:0.72rem;font-weight:700;color:white;line-height:1.3}
+.group-song .g-mood{font-size:0.62rem;color:var(--gold);margin-top:3px}
+
+.how-it-works{margin-top:8px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.step{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;text-align:center}
+.step .s-icon{font-size:2rem;display:block;margin-bottom:8px}
+.step h4{font-size:0.85rem;font-weight:700;margin-bottom:4px}
+.step p{font-size:0.72rem;color:rgba(255,255,255,0.45)}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<nav>
+  <div class="nav-logo">🎵 EmoTune</div>
+  <div class="nav-user">
+    <div class="avatar-badge">{{ avatar }}</div>
+    <span class="username">{{ username }}</span>
+    <a href="/logout"><button class="logout-btn">Logout</button></a>
+  </div>
+</nav>
+<main>
+  <div class="hero">
+    <h2>Apni Feeling Ko <span>Bollywood</span> Bana Do!</h2>
+    <p>Camera se emotion detect karo aur apni feeling ke liye perfect Bollywood songs suno 🎵</p>
+    <a href="/detect" class="big-btn"><span class="icon">📷</span> Camera Kholo – Emotion Detect Karo</a>
+  </div>
+
+  <div class="section-title">🎭 Mood Choose Karo – Manually</div>
+  <div class="emotion-grid" id="emotion-grid"></div>
+
+  <div class="group-section">
+    <div class="group-header">
+      <span class="icon">👥</span>
+      <div>
+        <h3>Group Anthems – Sab Ke Liye!</h3>
+        <p>Jab camera mein multiple log ho – yeh songs bajenge</p>
+      </div>
+    </div>
+    <div class="group-scroll" id="group-songs"></div>
+  </div>
+
+  <div class="era-section">
+    <div class="section-title">🎬 Era Ke Hisaab Se Suno</div>
+    <div class="era-tabs">
+      <button class="era-tab active" onclick="loadEra('trending',this)">🔥 Trending</button>
+      <button class="era-tab" onclick="loadEra('90s',this)">💿 90s Hits</button>
+      <button class="era-tab" onclick="loadEra('2000s',this)">📀 2000s</button>
+    </div>
+    <div class="songs-grid" id="era-songs"></div>
+  </div>
+
+  <div class="how-it-works">
+    <div class="section-title">⚡ Kaise Kaam Karta Hai</div>
+    <div class="steps">
+      <div class="step"><span class="s-icon">📱</span><h4>Register Karo</h4><p>Free account banao – ek minute mein</p></div>
+      <div class="step"><span class="s-icon">📷</span><h4>Camera Kholo</h4><p>Face-API.js se real-time emotion detect</p></div>
+      <div class="step"><span class="s-icon">🎭</span><h4>Emotion Match</h4><p>Happy, Sad, Angry – AI pehchaanta hai</p></div>
+      <div class="step"><span class="s-icon">🎵</span><h4>Bollywood Baje</h4><p>Perfect Bollywood song YouTube pe chalega</p></div>
+    </div>
+  </div>
+</main>
+
+<script>
+async function loadEmotions(){
+  const res=await fetch('/api/emotions');
+  const data=await res.json();
+  const grid=document.getElementById('emotion-grid');
+  grid.innerHTML='';
+  for(const [key,val] of Object.entries(data)){
+    const a=document.createElement('a');
+    a.href=`/detect?emotion=${key}`;
+    a.className='emotion-chip';
+    a.innerHTML=`<span class="e">${val.emoji}</span><span class="el">${val.label}</span>`;
+    grid.appendChild(a);
+  }
+}
+
+async function loadGroupSongs(){
+  const res=await fetch('/api/group_songs');
+  const data=await res.json();
+  const cont=document.getElementById('group-songs');
+  cont.innerHTML='';
+  data.songs.forEach(s=>{
+    const a=document.createElement('a');
+    a.href=s.youtube;a.target='_blank';a.className='group-song';
+    a.innerHTML=`<span class="g-thumb">${s.thumb}</span><div class="g-title">${s.title}</div><div class="g-mood">${s.mood}</div>`;
+    cont.appendChild(a);
+  });
+}
+
+async function loadEra(era,btn){
+  document.querySelectorAll('.era-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const res=await fetch(`/api/songs/neutral?era=${era}`);
+  const data=await res.json();
+  const grid=document.getElementById('era-songs');
+  grid.innerHTML='';
+  data.songs.forEach(s=>{
+    const a=document.createElement('a');
+    a.href=s.youtube;a.target='_blank';a.className='song-card';
+    a.innerHTML=`<div class="song-thumb" style="background:${s.color||'rgba(123,47,247,0.3)'}">${s.thumb}</div><div class="song-info"><div class="title">${s.title}</div><div class="artist">${s.artist}</div><div class="film">${s.film}</div></div><span class="play-icon">▶️</span>`;
+    grid.appendChild(a);
+  });
+}
+
+loadEmotions();
+loadGroupSongs();
+loadEra('trending',document.querySelector('.era-tab.active'));
+</script>
+</body>
+</html>

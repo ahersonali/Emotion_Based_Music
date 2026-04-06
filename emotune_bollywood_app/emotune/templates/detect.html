@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EmoTune – Detect Emotion</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#f7c948;--pink:#e84393;--purple:#7b2ff7;--dark:#0d0d1a;--card:rgba(255,255,255,0.06);--border:rgba(255,255,255,0.1)}
+body{min-height:100vh;background:var(--dark);font-family:'Poppins',sans-serif;color:white}
+.bg{position:fixed;inset:0;background:radial-gradient(ellipse at 20% 30%,rgba(123,47,247,0.25) 0%,transparent 55%),radial-gradient(ellipse at 80% 70%,rgba(232,67,147,0.2) 0%,transparent 50%),var(--dark);z-index:0;pointer-events:none}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(13,13,26,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px}
+.back-btn{padding:6px 14px;border:1px solid var(--border);border-radius:20px;background:none;color:rgba(255,255,255,0.6);font-size:0.8rem;cursor:pointer;font-family:'Poppins',sans-serif;transition:all 0.3s;text-decoration:none}
+.back-btn:hover{background:rgba(255,255,255,0.08);color:white}
+.nav-title{font-size:1rem;font-weight:700;background:linear-gradient(135deg,var(--gold),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-user{margin-left:auto;display:flex;align-items:center;gap:8px}
+.avatar-sm{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));display:flex;align-items:center;justify-content:center;font-size:0.9rem}
+
+main{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:20px 16px 60px}
+
+/* Camera section */
+.cam-section{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+@media(max-width:600px){.cam-section{grid-template-columns:1fr}}
+.cam-box{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  overflow:hidden;position:relative;aspect-ratio:4/3;
+}
+.cam-placeholder{
+  width:100%;height:100%;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:10px;color:rgba(255,255,255,0.3);
+}
+.cam-placeholder span{font-size:3rem}
+.cam-placeholder p{font-size:0.8rem;text-align:center;padding:0 16px}
+#video{width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1)}
+#canvas{display:none}
+.cam-overlay{position:absolute;inset:0;pointer-events:none}
+
+/* Status badge */
+.status-bar{
+  position:absolute;bottom:10px;left:10px;right:10px;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);
+  border-radius:10px;padding:8px 12px;display:flex;align-items:center;gap:8px;
+}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0}
+.status-dot.active{background:#2ed573;animation:blink 1s infinite}
+.status-dot.detecting{background:var(--gold);animation:blink 0.5s infinite}
+@keyframes blink{50%{opacity:0.3}}
+.status-text{font-size:0.72rem;color:rgba(255,255,255,0.8)}
+
+/* Controls */
+.controls{display:flex;flex-direction:column;gap:12px;justify-content:center}
+.ctrl-btn{
+  padding:13px 20px;border-radius:14px;border:none;cursor:pointer;
+  font-size:0.9rem;font-weight:700;font-family:'Poppins',sans-serif;
+  transition:all 0.3s;display:flex;align-items:center;gap:8px;justify-content:center;
+}
+.ctrl-btn.primary{background:linear-gradient(135deg,var(--purple),var(--pink));color:white;box-shadow:0 6px 20px rgba(123,47,247,0.4)}
+.ctrl-btn.primary:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(123,47,247,0.5)}
+.ctrl-btn.secondary{background:rgba(255,255,255,0.08);color:white;border:1px solid var(--border)}
+.ctrl-btn.secondary:hover{background:rgba(255,255,255,0.14)}
+.ctrl-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important}
+
+/* Era selector */
+.era-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.era-btn{
+  padding:6px 14px;border-radius:20px;border:1px solid var(--border);
+  background:none;color:rgba(255,255,255,0.5);font-size:0.75rem;font-weight:600;
+  cursor:pointer;font-family:'Poppins',sans-serif;transition:all 0.3s;
+}
+.era-btn.active,.era-btn:hover{background:linear-gradient(135deg,var(--gold),var(--pink));color:var(--dark);border-color:transparent}
+
+/* Emotion result */
+.emotion-result{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:20px;margin-bottom:20px;display:none;
+  transition:all 0.5s;
+}
+.emotion-result.show{display:block;animation:fadeUp 0.5s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.emo-header{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.emo-icon{font-size:3rem;line-height:1}
+.emo-label{font-size:1.3rem;font-weight:900}
+.emo-sublabel{font-size:0.8rem;color:rgba(255,255,255,0.5)}
+.face-count{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 12px;
+  border-radius:20px;background:rgba(255,255,255,0.1);font-size:0.75rem;font-weight:600;
+  margin-left:auto;
+}
+
+/* Song results */
+.songs-header{font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.songs-list{display:flex;flex-direction:column;gap:8px}
+.song-row{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:all 0.3s;text-decoration:none;
+}
+.song-row:hover{background:rgba(255,255,255,0.09);transform:translateX(4px)}
+.song-row .s-num{font-size:0.8rem;color:rgba(255,255,255,0.25);width:18px;text-align:center;flex-shrink:0}
+.song-row .s-thumb{font-size:1.5rem;flex-shrink:0}
+.song-row .s-info{flex:1;min-width:0}
+.song-row .s-title{font-size:0.85rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-row .s-meta{font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:1px}
+.song-row .s-film{font-size:0.65rem;color:var(--gold);font-weight:600}
+.song-row .s-play{margin-left:auto;font-size:1rem;flex-shrink:0;opacity:0.4}
+.song-row:hover .s-play{opacity:1}
+.song-row.highlighted{border-color:var(--gold);background:rgba(247,201,72,0.08)}
+
+/* Group mode banner */
+.group-banner{
+  background:linear-gradient(135deg,rgba(123,47,247,0.3),rgba(232,67,147,0.3));
+  border:1px solid rgba(255,255,255,0.2);border-radius:16px;
+  padding:14px 18px;margin-bottom:16px;display:none;
+  align-items:center;gap:12px;
+}
+.group-banner.show{display:flex;animation:fadeUp 0.4s ease}
+.group-banner .g-icon{font-size:2rem;flex-shrink:0}
+.group-banner h4{font-size:0.9rem;font-weight:700}
+.group-banner p{font-size:0.72rem;color:rgba(255,255,255,0.6)}
+
+/* Loading shimmer */
+.shimmer{
+  background:linear-gradient(90deg,rgba(255,255,255,0.05) 25%,rgba(255,255,255,0.1) 50%,rgba(255,255,255,0.05) 75%);
+  background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* Confidence bars */
+.conf-bars{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.conf-row{display:flex;align-items:center;gap:8px}
+.conf-label{font-size:0.7rem;color:rgba(255,255,255,0.5);width:70px;flex-shrink:0}
+.conf-bar-bg{flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden}
+.conf-bar-fill{height:100%;border-radius:10px;transition:width 0.6s ease;background:linear-gradient(90deg,var(--purple),var(--pink))}
+.conf-val{font-size:0.7rem;color:rgba(255,255,255,0.4);width:30px;text-align:right;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<nav>
+  <a href="/home" class="back-btn">← Home</a>
+  <span class="nav-title">📷 Emotion Detect</span>
+  <div class="nav-user">
+    <div class="avatar-sm">{{ avatar }}</div>
+    <span style="font-size:0.8rem;color:rgba(255,255,255,0.7)">{{ username }}</span>
+  </div>
+</nav>
+
+<main>
+  <!-- Camera + Controls -->
+  <div class="cam-section">
+    <div class="cam-box">
+      <div class="cam-placeholder" id="cam-placeholder">
+        <span>📷</span>
+        <p>Camera shuru karne ke liye button dabao</p>
+      </div>
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas" width="640" height="480"></canvas>
+      <div class="status-bar" id="status-bar" style="display:none">
+        <div class="status-dot" id="status-dot"></div>
+        <span class="status-text" id="status-text">Taiyaar ho raha hai...</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div>
+        <p style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-bottom:8px">🎬 ERA CHUNIYE</p>
+        <div class="era-row">
+          <button class="era-btn active" onclick="setEra('trending',this)">🔥 Trending</button>
+          <button class="era-btn" onclick="setEra('90s',this)">💿 90s</button>
+          <button class="era-btn" onclick="setEra('2000s',this)">📀 2000s</button>
+        </div>
+      </div>
+      <button class="ctrl-btn primary" id="start-btn" onclick="startCamera()">📷 Camera Shuru Karo</button>
+      <button class="ctrl-btn secondary" id="snap-btn" onclick="detectEmotion()" disabled>🎭 Emotion Pakdo!</button>
+      <button class="ctrl-btn secondary" id="auto-btn" onclick="toggleAuto()" disabled>⚡ Auto Detect ON</button>
+      <button class="ctrl-btn secondary" id="stop-btn" onclick="stopCamera()" disabled>⏹ Camera Band Karo</button>
+
+      <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:14px;padding:12px">
+        <p style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">📊 Confidence</p>
+        <div class="conf-bars" id="conf-bars">
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.25)">Emotion detect hone ke baad yahan dikhega</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Group Banner -->
+  <div class="group-banner" id="group-banner">
+    <span class="g-icon">👥</span>
+    <div>
+      <h4>Group Detected! Sab ke liye special songs! 🎉</h4>
+      <p id="group-count-text">Multiple faces detected – Group Anthem mode activated!</p>
+    </div>
+  </div>
+
+  <!-- Emotion Result -->
+  <div class="emotion-result" id="emotion-result">
+    <div class="emo-header">
+      <span class="emo-icon" id="emo-icon">🎵</span>
+      <div>
+        <div class="emo-label" id="emo-label">Detecting...</div>
+        <div class="emo-sublabel" id="emo-sublabel">Aapki feeling...</div>
+      </div>
+      <div class="face-count" id="face-count" style="display:none">👤 1 face</div>
+    </div>
+
+    <div class="songs-header" id="songs-header">🎵 Aapke Mood Ke Liye Songs</div>
+    <div class="songs-list" id="songs-list"></div>
+  </div>
+</main>
+
+<!-- face-api.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script>
+let stream=null, autoInterval=null, currentEra='trending', modelsLoaded=false;
+const video=document.getElementById('video');
+const canvas=document.getElementById('canvas');
+
+// Check if pre-selected emotion from URL
+const urlParams=new URLSearchParams(window.location.search);
+const preEmotion=urlParams.get('emotion');
+if(preEmotion){
+  loadSongsForEmotion(preEmotion,0);
+}
+
+async function loadModels(){
+  setStatus('detecting','AI Models load ho rahe hain...');
+  try{
+    // Use face-api.js models from CDN
+    const MODEL_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+    ]);
+    modelsLoaded=true;
+    setStatus('active','Models ready! Camera ON hai');
+    document.getElementById('snap-btn').disabled=false;
+    document.getElementById('auto-btn').disabled=false;
+  }catch(e){
+    // Fallback: use simulated detection
+    console.warn('face-api CDN failed, using simulation mode');
+    modelsLoaded=false;
+    setStatus('active','Simulation mode – Camera ON!');
+    document.getElementById('snap-btn').disabled=false;
+    document.getElementById('auto-btn').disabled=false;
+  }
+}
+
+async function startCamera(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
+    video.srcObject=stream;
+    video.style.display='block';
+    document.getElementById('cam-placeholder').style.display='none';
+    document.getElementById('status-bar').style.display='flex';
+    document.getElementById('start-btn').disabled=true;
+    document.getElementById('stop-btn').disabled=false;
+    setStatus('detecting','Loading AI...');
+    await loadModels();
+  }catch(e){
+    alert('Camera access nahi mila! Browser mein camera allow karo.');
+  }
+}
+
+function stopCamera(){
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+  if(autoInterval){clearInterval(autoInterval);autoInterval=null;document.getElementById('auto-btn').textContent='⚡ Auto Detect ON';}
+  video.style.display='none';
+  video.srcObject=null;
+  document.getElementById('cam-placeholder').style.display='flex';
+  document.getElementById('status-bar').style.display='none';
+  document.getElementById('start-btn').disabled=false;
+  document.getElementById('stop-btn').disabled=true;
+  document.getElementById('snap-btn').disabled=true;
+  document.getElementById('auto-btn').disabled=true;
+  stream=null;
+}
+
+function setEra(era,btn){
+  currentEra=era;
+  document.querySelectorAll('.era-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setStatus(type,text){
+  const dot=document.getElementById('status-dot');
+  dot.className='status-dot '+(type==='active'?'active':type==='detecting'?'detecting':'');
+  document.getElementById('status-text').textContent=text;
+}
+
+async function detectEmotion(){
+  if(!video.srcObject){alert('Pehle camera shuru karo!');return;}
+  setStatus('detecting','Emotion detect ho raha hai...');
+
+  let emotion='neutral', faceCount=1, expressions={};
+
+  if(modelsLoaded){
+    try{
+      const detections=await faceapi
+        .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceExpressions();
+
+      faceCount=detections.length;
+
+      if(faceCount>0){
+        // Aggregate expressions from all faces
+        const allExp={happy:0,sad:0,angry:0,surprised:0,fearful:0,disgusted:0,neutral:0};
+        detections.forEach(d=>{
+          Object.keys(allExp).forEach(k=>{if(d.expressions[k])allExp[k]+=d.expressions[k];});
+        });
+        Object.keys(allExp).forEach(k=>allExp[k]/=faceCount);
+        expressions=allExp;
+        emotion=Object.entries(allExp).sort((a,b)=>b[1]-a[1])[0][0];
+      }
+    }catch(e){console.warn('Detection error:',e);}
+  }else{
+    // Simulation mode
+    const emots=['happy','sad','neutral','surprised','angry','fearful'];
+    const weights=[0.35,0.2,0.2,0.1,0.1,0.05];
+    let r=Math.random(),acc=0;
+    for(let i=0;i<emots.length;i++){acc+=weights[i];if(r<acc){emotion=emots[i];break;}}
+    faceCount=Math.random()<0.3?Math.floor(Math.random()*4)+2:1;
+    // Simulate expressions
+    emots.forEach(e=>{expressions[e]=e===emotion?0.7+Math.random()*0.25:Math.random()*0.15;});
+  }
+
+  setStatus('active',`${faceCount} face(s) detected – ${emotion}!`);
+  updateConfidenceBars(expressions);
+  await loadSongsForEmotion(emotion, faceCount);
+}
+
+function updateConfidenceBars(expressions){
+  const labels={happy:'😄 Happy',sad:'😢 Sad',angry:'😠 Angry',surprised:'😲 Surprised',fearful:'😨 Fearful',disgusted:'😒 Disgusted',neutral:'😊 Neutral'};
+  const cont=document.getElementById('conf-bars');
+  cont.innerHTML='';
+  const sorted=Object.entries(expressions).sort((a,b)=>b[1]-a[1]);
+  sorted.forEach(([k,v])=>{
+    const pct=Math.round(v*100);
+    cont.innerHTML+=`<div class="conf-row">
+      <span class="conf-label">${labels[k]||k}</span>
+      <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:${pct}%"></div></div>
+      <span class="conf-val">${pct}%</span>
+    </div>`;
+  });
+}
+
+async function loadSongsForEmotion(emotion,faceCount){
+  const isGroup=faceCount>2;
+  const groupBanner=document.getElementById('group-banner');
+  if(isGroup){
+    groupBanner.classList.add('show');
+    document.getElementById('group-count-text').textContent=`${faceCount} log camera mein! Group Anthem mode 🎉`;
+  }else{
+    groupBanner.classList.remove('show');
+  }
+
+  const era=isGroup?'trending':currentEra;
+  const endpoint=isGroup?'/api/group_songs':`/api/songs/${emotion}?era=${era}`;
+  const res=await fetch(endpoint);
+  const data=await res.json();
+
+  const result=document.getElementById('emotion-result');
+  result.classList.add('show');
+
+  if(isGroup){
+    document.getElementById('emo-icon').textContent='👥';
+    document.getElementById('emo-label').textContent='Group Anthems!';
+    document.getElementById('emo-sublabel').textContent='Sab ke liye – Party Time!';
+    document.getElementById('face-count').style.display='flex';
+    document.getElementById('face-count').textContent=`👥 ${faceCount} faces`;
+    document.getElementById('songs-header').textContent='🎉 Group Ke Liye Best Songs';
+    renderSongs(data.songs);
+  }else{
+    document.getElementById('emo-icon').textContent=data.emoji||'🎵';
+    document.getElementById('emo-label').textContent=data.label||emotion;
+    document.getElementById('emo-sublabel').textContent=`Era: ${era} • AI ne detect kiya`;
+    if(faceCount>0){
+      document.getElementById('face-count').style.display='flex';
+      document.getElementById('face-count').textContent=`👤 ${faceCount} face`;
+    }
+    document.getElementById('songs-header').textContent=`🎵 ${data.label||emotion} Ke Liye Songs`;
+    renderSongs(data.songs||[]);
+  }
+
+  // Apply gradient
+  const grad=data.gradient||'linear-gradient(135deg,rgba(123,47,247,0.2),rgba(232,67,147,0.2))';
+  result.style.background=grad.replace('linear-gradient','linear-gradient').replace(/,#/g,',rgba(').replace(/\)/g,',0.2)').replace('rgba(rgba','rgba');
+  result.style.background=var_to_rgba(grad,0.15);
+}
+
+function var_to_rgba(grad,alpha){
+  // Simple gradient to card bg
+  return 'rgba(255,255,255,0.06)';
+}
+
+function renderSongs(songs){
+  const list=document.getElementById('songs-list');
+  list.innerHTML='';
+  songs.forEach((s,i)=>{
+    const a=document.createElement('a');
+    a.href=s.youtube;a.target='_blank';a.className='song-row'+(i===0?' highlighted':'');
+    a.innerHTML=`
+      <span class="s-num">${i===0?'▶':'${i+1}'}</span>
+      <span class="s-thumb">${s.thumb||'🎵'}</span>
+      <div class="s-info">
+        <div class="s-title">${s.title}</div>
+        <div class="s-meta">${s.artist} • ${s.year||''}</div>
+        <div class="s-film">${s.film||''}</div>
+      </div>
+      <span class="s-play">🔗</span>
+    `;
+    // Fix template literal in inner HTML
+    a.querySelector('.s-num').textContent=i===0?'▶':(i+1)+'';
+    list.appendChild(a);
+  });
+}
+
+function toggleAuto(){
+  const btn=document.getElementById('auto-btn');
+  if(autoInterval){
+    clearInterval(autoInterval);autoInterval=null;
+    btn.textContent='⚡ Auto Detect ON';
+    setStatus('active','Auto mode band');
+  }else{
+    autoInterval=setInterval(detectEmotion,4000);
+    btn.textContent='⏸ Auto Detect OFF';
+    setStatus('detecting','Auto mode chalu – har 4 sec mein detect!');
+    detectEmotion();
+  }
+}
+</script>
+</body>
+</html>
